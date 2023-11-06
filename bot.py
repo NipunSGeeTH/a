@@ -8,26 +8,23 @@ bot = telebot.TeleBot(BOT_TOKEN)
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
-    # Check if the message contains a link
-    if 'http' in message.text:
-        # Extract the link from the message
-        link = message.text.split(' ')[0]
+    # Check if the message contains an image link
+    if 'http' in message.text and message.text.endswith(('.jpg', '.jpeg', '.png', '.gif')):
+        # Extract the image link from the message
+        image_link = message.text
 
-        # Download the file from the link
-        response = requests.get(link, stream=True)
-        file_name = link.split('/')[-1]
+        # Download the image from the link
+        response = requests.get(image_link, stream=True)
 
-        # Check if the file exists
+        # Check if the image exists
         if response.status_code == 200:
-            # Upload the file to Telegram
-            with open(file_name, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=1024):
-                    f.write(chunk)
-
-            # Send the uploaded file to the chat
-            bot.send_document(message.chat.id, open(file_name, 'rb'))
+            # Send the image to the chat
+            bot.send_photo(message.chat.id, response.raw.read())
         else:
-            # Notify the user that the file could not be downloaded
-            bot.send_message(message.chat.id, 'Failed to download the file.')
+            # Notify the user that the image could not be downloaded
+            bot.send_message(message.chat.id, 'Failed to download the image.')
+    else:
+        # If it's not an image link, handle it as a regular message
+        bot.send_message(message.chat.id, 'Please send an image link.')
 
 bot.polling()
