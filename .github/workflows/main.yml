@@ -13,7 +13,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests pytelegrambotapi urllib3 aiohttp
+          pip install requests pytelegrambotapi sympy aiohttp
 
       - name: Build bot
         run: python bot.py
