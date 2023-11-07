@@ -13,7 +13,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install requests pytelegrambotapi
+          pip install requests pytelegrambotapi urllib3
 
       - name: Build bot
         run: python bot.py
