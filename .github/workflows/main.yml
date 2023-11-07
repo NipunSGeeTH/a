@@ -1,33 +1,22 @@
-name: Run Telegram Bot with Link Upload
+name: Telegram Bot
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Install dependencies
         run: |
-          pip install requests pytelegrambotapi sympy aiohttp
+          pip install telebot
+          pip install pillow
 
-      - name: Build bot
-        run: python bot.py
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download artifact
-        uses: actions/download_artifact@v3
-        with:
-          name: telegram-bot
-          path: bot.py
-
-      - name: Run bot
+      - name: Run the bot
         run: python bot.py
