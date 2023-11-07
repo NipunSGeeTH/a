@@ -41,6 +41,8 @@ initial_message = "Enter a mathematical expression:"
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     # Send the initial message with inline keyboard
+    global current_expression
+    current_expression = ""
     bot.send_message(message.chat.id, initial_message, reply_markup=keyboard)
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -52,4 +54,14 @@ def handle_callback_query(call):
     if re.match(NUMBER_PATTERN, callback_data):
         # Append the number to the current expression
         current_expression += callback_data.split("_")[1]
-    elif re
+    elif re.match(OPERATOR_PATTERN, callback_data):
+        # Append the operator to the current expression
+        current_expression += callback_data.split("_")[1]
+    elif re.match(PARENTHESIS_PATTERN, callback_data):
+        # Append the parenthesis to the current expression
+        current_expression += callback_data.split("_")[1]
+
+    # Update the message with the updated expression
+    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Expression: {current_expression}", reply_markup=keyboard)
+
+bot.polling()
