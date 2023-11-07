@@ -52,3 +52,20 @@ def handle_message(message):
         bot.send_message(message.chat.id, 'To download an image or video, simply send me the link.')
 
 bot.polling()
+
+import aiohttp
+
+async def download_media(media_link, media_type, bot, chat_id):
+    # Check if the media exists
+    async with aiohttp.ClientSession() as session:
+        async with session.get(media_link) as response:
+            if response.status == 200:
+                # Send the media to the chat
+                if media_type == 'image':
+                    await bot.send_photo(chat_id, response.read())
+                elif media_type == 'video':
+                    await bot.send_video(chat_id, response.read())
+            else:
+                # Notify the user that the media could not be downloaded
+                await bot.send_message(chat_id, f'Failed to download the {media_type}.')
+
