@@ -1,71 +1,55 @@
 import telebot
-import urllib.request
+import sympy as sp
 
 # Replace with your bot token
 BOT_TOKEN = '2118571380:AAGR-_rB53MsMon35q5i2B3Nw7RJqPXHy18'
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-def download_media(media_link, media_type, bot, chat_id):
-    # Check if the media exists
-    try:
-        with urllib.request.urlopen(media_link) as response:
-            if response.status == 200:
-                # Send the media to the chat
-                if media_type == 'image':
-                    bot.send_photo(chat_id, response.read())
-                elif media_type == 'video':
-                    bot.send_video(chat_id, response.read())
-            else:
-                # Notify the user that the media could not be downloaded
-                bot.send_message(chat_id, f'Failed to download the {media_type}.')
-    except urllib.error.URLError:
-        # Handle network errors
-        bot.send_message(chat_id, f'Failed to download the {media_type}.')
+# Define callback data patterns
+NUMBER_PATTERN = r"number_(\d)"
+OPERATOR_PATTERN = r"operator_([\+\-\*\/])"
+PARENTHESIS_PATTERN = r"parenthesis_(\(\))"
+
+# Define inline keyboard buttons
+number_buttons = [
+    [telebot.types.InlineKeyboardButton(text=str(i), callback_data=f"number_{i}") for i in range(1, 10)],
+    [telebot.types.InlineKeyboardButton(text="0", callback_data="number_0")],
+]
+
+operator_buttons = [
+    [telebot.types.InlineKeyboardButton(text="+", callback_data="operator_+")],
+    [telebot.types.InlineKeyboardButton(text="-", callback_data="operator_-")],
+    [telebot.types.InlineKeyboardButton(text="*", callback_data="operator_*")],
+    [telebot.types.InlineKeyboardButton(text="/", callback_data="operator_/")],
+]
+
+parenthesis_buttons = [
+    [telebot.types.InlineKeyboardButton(text="(", callback_data="parenthesis_(")],
+    [telebot.types.InlineKeyboardButton(text=")", callback_data="parenthesis_)")],
+]
+
+# Combine buttons into a single keyboard
+keyboard = telebot.types.InlineKeyboardMarkup()
+keyboard.add(*number_buttons)
+keyboard.add(*operator_buttons)
+keyboard.add(*parenthesis_buttons)
+
+# Define initial message
+initial_message = "Enter a mathematical expression:"
 
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
-    # Check if the message contains a supported media link (image or video)
-    if 'http' in message.text:
-        media_link = message.text
+    # Send the initial message with inline keyboard
+    bot.send_message(message.chat.id, initial_message, reply_markup=keyboard)
 
-        # Determine the media type (image or video)
-        if media_link.endswith(('.jpg', '.jpeg', '.png', '.gif')):
-            media_type = 'image'
-        elif media_link.endswith(('.mp4', '.avi', '.mov', '.webm')):
-            media_type = 'video'
-        else:
-            media_type = None
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback_query(call):
+    # Get the callback data
+    callback_data = call.data
 
-        # Send the appropriate media if the type is recognized
-        if media_type:
-            # Download the media from the link
-            download_media(media_link, media_type, bot, message.chat.id)
-        else:
-            # If it's not a recognized media link, handle it as a regular message
-            bot.send_message(message.chat.id, 'Please send an image or video link.')
-
-    # Additional functionality
-    if message.text == '/start':
-        bot.send_message(message.chat.id, 'Hello! I am a bot that can download images and videos.')
-    elif message.text == '/help':
-        bot.send_message(message.chat.id, 'To download an image or video, simply send me the link.')
-
-bot.polling()
-
-import aiohttp
-
-async def download_media(media_link, media_type, bot, chat_id):
-    # Check if the media exists
-    async with aiohttp.ClientSession() as session:
-        async with session.get(media_link) as response:
-            if response.status == 200:
-                # Send the media to the chat
-                if media_type == 'image':
-                    await bot.send_photo(chat_id, response.read())
-                elif media_type == 'video':
-                    await bot.send_video(chat_id, response.read())
-            else:
-                # Notify the user that the media could not be downloaded
-                await bot.send_message(chat_id, f'Failed to download the {media_type}.')
-
+    # Process the callback data based on its pattern
+    if re.match(NUMBER_PATTERN, callback_data):
+        # Append the number to the current expression
+        current_expression += callback_data.split("_")[1]
+    elif re
