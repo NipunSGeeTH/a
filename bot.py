@@ -1,67 +1,22 @@
 import telebot
-import sympy as sp
 
 # Replace with your bot token
 BOT_TOKEN = '2118571380:AAGR-_rB53MsMon35q5i2B3Nw7RJqPXHy18'
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
-# Define callback data patterns
-NUMBER_PATTERN = r"number_(\d)"
-OPERATOR_PATTERN = r"operator_([\+\-\*\/])"
-PARENTHESIS_PATTERN = r"parenthesis_(\(\))"
+@bot.message_handler(commands=['start'])
+def send_welcome_message(message):
+    # Create an inline keyboard markup
+    keyboard = telebot.types.InlineKeyboardMarkup()
+    hi_button = telebot.types.InlineKeyboardButton(text="Hi", callback_data="hi_button")
+    keyboard.add(hi_button)
 
-# Define inline keyboard buttons
-number_buttons = [
-    [telebot.types.InlineKeyboardButton(text=str(i), callback_data=f"number_{i}") for i in range(1, 10)],
-    [telebot.types.InlineKeyboardButton(text="0", callback_data="number_0")],
-]
+    # Send the welcome message with inline keyboard
+    bot.send_message(message.chat.id, 'Hi! Click the button below to greet me.', reply_markup=keyboard)
 
-operator_buttons = [
-    [telebot.types.InlineKeyboardButton(text="+", callback_data="operator_+")],
-    [telebot.types.InlineKeyboardButton(text="-", callback_data="operator_-")],
-    [telebot.types.InlineKeyboardButton(text="*", callback_data="operator_*")],
-    [telebot.types.InlineKeyboardButton(text="/", callback_data="operator_/")],
-]
-
-parenthesis_buttons = [
-    [telebot.types.InlineKeyboardButton(text="(", callback_data="parenthesis_(")],
-    [telebot.types.InlineKeyboardButton(text=")", callback_data="parenthesis_)")],
-]
-
-# Combine buttons into a single keyboard
-keyboard = telebot.types.InlineKeyboardMarkup()
-keyboard.add(*number_buttons)
-keyboard.add(*operator_buttons)
-keyboard.add(*parenthesis_buttons)
-
-# Define initial message
-initial_message = "Enter a mathematical expression:"
-
-@bot.message_handler(func=lambda message: True)
-def handle_message(message):
-    # Send the initial message with inline keyboard
-    global current_expression
-    current_expression = ""
-    bot.send_message(message.chat.id, initial_message, reply_markup=keyboard)
-
-@bot.callback_query_handler(func=lambda call: True)
-def handle_callback_query(call):
-    # Get the callback data
-    callback_data = call.data
-
-    # Process the callback data based on its pattern
-    if re.match(NUMBER_PATTERN, callback_data):
-        # Append the number to the current expression
-        current_expression += callback_data.split("_")[1]
-    elif re.match(OPERATOR_PATTERN, callback_data):
-        # Append the operator to the current expression
-        current_expression += callback_data.split("_")[1]
-    elif re.match(PARENTHESIS_PATTERN, callback_data):
-        # Append the parenthesis to the current expression
-        current_expression += callback_data.split("_")[1]
-
-    # Update the message with the updated expression
-    bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=f"Expression: {current_expression}", reply_markup=keyboard)
+@bot.callback_query_handler(func=lambda call: call.data == "hi_button")
+def handle_hi_button_click(call):
+    bot.send_message(call.message.chat.id, "Hi there! How can I help you today?")
 
 bot.polling()
